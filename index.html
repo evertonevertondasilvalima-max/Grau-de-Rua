@@ -146,9 +146,9 @@ for(let i=-160;i<=160;i+=80){for(const z of [-12,12]){block(.16,5,.16,M.metal,i,
 const garageX=17,garageZ=-9;block(11,5,9,mat(0x315466),garageX,2.5,garageZ);block(11.2,.35,9.2,mat(0x202c34),garageX,5.1,garageZ);block(6,2.9,.16,mat(0x14232c),garageX,1.45,garageZ+4.6);block(7,.8,.22,mat(0xf2b84c),garageX,4,garageZ+4.8);
 // Dez motos com estilos/cores distintos, construídas em 3D low-poly
 const bikeDefs=[
-{name:'Urbana 125',price:0,color:0x2186c8,speed:17,style:0},
-{name:'Street 150',price:180,color:0xd74736,speed:19,style:1},
-{name:'Trail 160',price:260,color:0x4f9d5c,speed:18,style:2},
+{name:'Trail Adventure (estilo Africa Twin)',price:0,color:0x2186c8,speed:17,style:2},
+{name:'Sport Touring (estilo Tiger Sport)',price:180,color:0xd74736,speed:19,style:3},
+{name:'Street 160 (modelo genérico)',price:260,color:0x4f9d5c,speed:18,style:1},
 {name:'Sport 250',price:420,color:0xe7b52e,speed:23,style:3},
 {name:'Naked 300',price:550,color:0x343b47,speed:24,style:4},
 {name:'Clássica 150',price:700,color:0xc9b58a,speed:18,style:5},
@@ -159,9 +159,9 @@ const bikeDefs=[
 ];
 let owned=[true,false,false,false,false,false,false,false,false,false],selectedBike=0,money=500,bike=null,bikeWheels=[],activeBikeMixer=null;
 const realBikeModels=[
- 'https://cdn.3dassets.dev/assets/15416/v1/model.glb',
- 'https://cdn.3dassets.dev/assets/15415/v1/model.glb',
- 'https://cdn.3dassets.dev/assets/15422/v1/model.glb',
+ 'https://files.innerscene.com/library/adventure-motorcycle-3de675e4/05f6f5080ca0a95360c3/adventure-motorcycle.glb',
+ 'https://files.innerscene.com/library/sport-motorcycle-e21e8303/625e0c0c4f03a83504cf/sport-motorcycle.glb',
+ 'https://files.innerscene.com/library/cafe-racer-motorcycle-e3fce667/20df806e3886dd1fe8fa/cafe-racer-motorcycle.glb',
  'https://cdn.3dassets.dev/assets/15421/v1/model.glb',
  'https://cdn.3dassets.dev/assets/15420/v1/model.glb',
  'https://cdn.3dassets.dev/assets/15418/v1/model.glb',
@@ -177,6 +177,13 @@ function loadRealBikeModel(index,target){
  bikeModelCache.get(url).then(gltf=>{
   if(bike!==target)return;
   const model=gltf.scene.clone(true);
+  const bounds=new THREE.Box3().setFromObject(model);
+  const size=bounds.getSize(new THREE.Vector3());
+  const maxDim=Math.max(size.x,size.y,size.z);
+  if(maxDim>0 && maxDim>3.2)model.scale.setScalar(2.8/maxDim);
+  const fitted=new THREE.Box3().setFromObject(model);
+  const center=fitted.getCenter(new THREE.Vector3());
+  model.position.set(-center.x,-fitted.min.y,-center.z);
   model.rotation.y=Math.PI;
   model.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});
   target.clear();target.add(model);
@@ -208,13 +215,13 @@ function setBike(i){if(bike)scene.remove(bike);bikeWheels=[];activeBikeMixer=nul
 const player=new THREE.Group();scene.add(player);
 let playerMixer=null,playerActions={};
 function loadPlayableCharacter(){
- gobkitLoader.load('https://gobkit.com/freebies/human015/OfficeWorker.glb',gltf=>{
+ gobkitLoader.load('https://gobkit.com/freebies/human015/Student.glb',gltf=>{
   const obj=gltf.scene;const bounds=new THREE.Box3().setFromObject(obj);const size=bounds.getSize(new THREE.Vector3());
   if(size.y>0)obj.scale.setScalar(1.72/size.y);
   const scaled=new THREE.Box3().setFromObject(obj);obj.position.y=-scaled.min.y;
   obj.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});
   player.add(obj);
-  if(gltf.animations.length){playerMixer=new THREE.AnimationMixer(obj);for(const clip of gltf.animations){const name=clip.name.toLowerCase();playerActions[name]=playerMixer.clipAction(clip)}const idle=gltf.animations.find(a=>a.name.toLowerCase().includes('idle'));if(idle)playerActions[idle.name.toLowerCase()].play();}
+  if(gltf.animations.length){playerMixer=new THREE.AnimationMixer(obj);for(const clip of gltf.animations){const name=clip.name.toLowerCase();playerActions[name]=playerMixer.clipAction(clip)}const idle=gltf.animations.find(a=>a.name.toLowerCase()==='idle');if(idle)playerActions[idle.name.toLowerCase()].play();}
  },undefined,e=>console.warn('Personagem 3D não carregou:',e));
 }
 loadPlayableCharacter();
