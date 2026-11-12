@@ -140,8 +140,9 @@ const armL=block(.17,.7,.18,shirt,-.43,1.24,0,player),armR=block(.17,.7,.18,shir
 const legL=block(.22,.72,.24,pants,-.17,.48,0,player),legR=block(.22,.72,.24,pants,.17,.48,0,player);
 block(.24,.14,.36,shoe,-.17,.1,-.03,player);block(.24,.14,.36,shoe,.17,.1,-.03,player);
 player.position.set(0,0,3);
-let riding=false,runOn=false,velocity=0,yaw=0,camYaw=0,camPitch=.22,keys={},joy={x:0,y:0},gas=false,brake=false,clock=new THREE.Clock();
 setBike(0);bike.position.set(2,0,3);
+let riding=false,runOn=false,velocity=0,yaw=0,camYaw=0,camPitch=.22,keys={},joy={x:0,y:0},gas=false,brake=false,clock=new THREE.Clock();
+
 // Trânsito civil: carros circulam pela malha
 const traffic=[];
 function makeCar(x,z,color,dir){const g=new THREE.Group(),paint=mat(color,.45,.05);block(1.8,.62,3,paint,0,.65,0,g);block(1.42,.68,1.55,M.glass,0,1.25,-.05,g);for(const xx of [-.92,.92])for(const zz of [-.95,.95]){const w=mesh(new THREE.CylinderGeometry(.25,.25,.16,12),M.rubber,xx,.34,zz,g);w.rotation.z=Math.PI/2}g.position.set(x,0,z);scene.add(g);traffic.push({g,dir,speed:3+Math.random()*3,axis:Math.random()>.5?'x':'z'})}
@@ -180,15 +181,15 @@ function updateMinimap(){const c=$('minimap').getContext('2d');c.clearRect(0,0,1
 function clampWorld(o){o.x=THREE.MathUtils.clamp(o.x,-205,205);o.z=THREE.MathUtils.clamp(o.z,-205,205)}
 function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.04),time=clock.elapsedTime;
  marker.position.y=.15+Math.sin(time*2)*.18;beacon.rotation.y+=dt*.7;
- const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joy.y;
+ const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joy.y+(riding&&gas?1:0);
  const strafe=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;
  let targetSpeed=0;
- if(riding){const input=Math.max(0,forward)+(gas?1:0);targetSpeed=input*bikeDefs[selectedBike].speed;if(brake||(keys.s))targetSpeed=-4;velocity=THREE.MathUtils.damp(velocity,targetSpeed,2.4,dt)}
+ if(riding){const input=Math.min(1,Math.max(0,forward));targetSpeed=input*bikeDefs[selectedBike].speed;if(brake||(keys.s))targetSpeed=-4;velocity=THREE.MathUtils.damp(velocity,targetSpeed,2.4,dt)}
  else{targetSpeed=(runOn?9:5)*Math.min(1,Math.hypot(forward,strafe));velocity=THREE.MathUtils.damp(velocity,targetSpeed,8,dt)}
  const base=riding?bike:player;let dir=new THREE.Vector3(strafe,0,-forward);if(dir.lengthSq()>1)dir.normalize();dir.applyAxisAngle(new THREE.Vector3(0,1,0),camYaw);
  if(Math.abs(forward)+Math.abs(strafe)>.05){base.position.addScaledVector(dir,velocity*dt);yaw=THREE.MathUtils.lerp(yaw,Math.atan2(-dir.x,-dir.z),1-Math.exp(-8*dt))}
  base.rotation.y=yaw;clampWorld(base.position);
- if(riding){player.position.copy(bike.position);bike.rotation.y=yaw;b ikePlaceholder=0;}
+ if(riding){player.position.copy(bike.position);bike.rotation.y=yaw;}
  else{bike.position.set(player.position.x+Math.sin(yaw)*1.7,0,player.position.z+Math.cos(yaw)*1.7);bike.rotation.y=yaw}
  if(!riding){const swing=Math.sin(time*(runOn?12:8))*Math.min(1,Math.abs(velocity)/3);legL.rotation.x=swing*.65;legR.rotation.x=-swing*.65;armL.rotation.x=-swing*.5;armR.rotation.x=swing*.5;torso.rotation.z=strafe*.06}
  bikeWheels.forEach(w=>{w.rotation.x+=velocity*dt*2});
