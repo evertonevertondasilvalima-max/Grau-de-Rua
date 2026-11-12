@@ -84,36 +84,27 @@ for(let p=-200;p<=200;p+=40){
  block(420,.12,1.6,M.walk,0,.01,p+8);block(420,.12,1.6,M.walk,0,.01,p-8);
  for(let q=-195;q<=195;q+=12){block(.16,.025,3,M.line,p,.06,q);block(3,.025,.16,M.line,q,.06,p)}
 }
-// Casas, prédios, lojas e fachadas
-const facades=[0xe7c8a0,0xd8d8d0,0xc98f7a,0xa9c6cd,0xe9dfc8,0xc3b8a5,0xd4c5ac].map(c=>mat(c));
-const roofMats=[mat(0x594b44),mat(0x7b5144),mat(0x47515a),mat(0x9a8b73)];
-const windowMat=mat(0x8bc7d8,.24),doorMat=mat(0x65452f);
-function makeTree(x,z,palm=false){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);mesh(new THREE.CylinderGeometry(.18,.28,2.5,7),M.wood,0,1.25,0,g);if(palm){for(let i=0;i<7;i++){const a=i*Math.PI*2/7;const leaf=mesh(new THREE.ConeGeometry(.28,2.7,5),mat(0x36764a),Math.cos(a)*.95,2.7,Math.sin(a)*.95,g);leaf.rotation.z=Math.cos(a)*.8;leaf.rotation.x=Math.sin(a)*.8}}else{mesh(new THREE.IcosahedronGeometry(1.55,1),mat(0x3d824d),0,3.1,0,g);mesh(new THREE.IcosahedronGeometry(.9,0),mat(0x579657),.6,3.6,.15,g)}}
-for(let gx=-200;gx<200;gx+=40)for(let gz=-200;gz<200;gz+=40){
- const cx=gx+20,cz=gz+20;
- const importedCell=((cx===60||cx===100)&&(cz===-20||cz===20))||((cx===20||cx===60||cx===100)&&cz===60);
- if(importedCell||(Math.abs(cx)<24&&Math.abs(cz)<24))continue;
- const count=1+Math.floor(Math.random()*2);
- for(let k=0;k<count;k++){const x=cx+(Math.random()-.5)*13,z=cz+(Math.random()-.5)*13,w=6+Math.random()*5,d=6+Math.random()*5,h=5+Math.random()*15;
- const facade=facades[Math.floor(Math.random()*facades.length)],roof=roofMats[Math.floor(Math.random()*roofMats.length)];
- block(w,h,d,facade,x,h/2,z);block(w+.2,.3,d+.2,roof,x,h+.15,z);
- for(let y=1.8;y<h-1;y+=2.3)for(let xx=-w/2+1;xx<w/2-.5;xx+=2.1){block(.85,1,.08,windowMat,x+xx,y,z+d/2+.06)}
- block(1.15,2,.1,doorMat,x-w*.22,1,z+d/2+.08);
- if(Math.random()>.55)makeTree(x+w/2+1,z+d/2+1,Math.random()>.65);
- }
-}
-for(let i=0;i<36;i++){const x=(Math.random()-.5)*350,z=(Math.random()-.5)*350;if(Math.abs(x%40)>11&&Math.abs(z%40)>11)makeTree(x,z,Math.random()>.75)}
-// Modelos 3D externos CC0 do Kit Cidade Low Poly: casas, comércio, árvores e veículos
-loadCityAsset('models/residencial/casa_simples.glb',60,20,4.2);
-loadCityAsset('models/residencial/casa_sobrado.glb',100,20,4.0);
-loadCityAsset('models/residencial/predio_alto.glb',100,-20,4.2);
-loadCityAsset('models/comercial/loja_esquina.glb',60,-20,4.0);
-loadCityAsset('models/industrial/oficina.glb',20,-60,4.0);
-loadCityAsset('models/vegetacao/ipe_amarelo.glb',20,60,3.0);
-loadCityAsset('models/vegetacao/buriti.glb',60,60,3.0);
-loadCityAsset('models/vegetacao/ipe_amarelo.glb',100,60,3.0);
-loadCityAsset('models/veiculos/carro.glb',-6,110,2.0);
-loadCityAsset('models/veiculos/taxi.glb',6,-110,2.0);
+// Arquitetura: usar modelos GLB reais do kit CC0 em vez de fachadas montadas com cubos
+const cityBuildings=[
+ ['models/residencial/casa_simples.glb',-100,-100,3.2],['models/residencial/casa_sobrado.glb',-60,-100,3.1],
+ ['models/residencial/casas_geminadas.glb',-20,-100,3.0],['models/residencial/predio_apartamentos.glb',60,-100,3.4],
+ ['models/residencial/predio_alto.glb',100,-100,3.5],['models/comercial/loja_esquina.glb',-100,-60,3.1],
+ ['models/comercial/mercado.glb',-60,-60,3.2],['models/comercial/restaurante.glb',-20,-60,3.0],
+ ['models/industrial/oficina.glb',20,-60,3.0],['models/comercial/hotel.glb',60,-60,3.3],
+ ['models/residencial/casa_simples.glb',100,-60,3.0],['models/residencial/casa_sobrado.glb',-100,20,3.0],
+ ['models/comercial/loja_esquina.glb',-60,20,3.0],['models/residencial/casas_geminadas.glb',-20,20,3.0],
+ ['models/residencial/predio_apartamentos.glb',60,20,3.1],['models/comercial/mercado.glb',100,20,3.0],
+ ['models/industrial/galpao.glb',-100,100,3.2],['models/comercial/restaurante.glb',-60,100,3.0],
+ ['models/residencial/casa_sobrado.glb',-20,100,3.0],['models/residencial/predio_alto.glb',60,100,3.2]
+];
+for(const [path,x,z,s] of cityBuildings)loadCityAsset(path,x,z,s,Math.random()*Math.PI*2);
+// Vegetação variada em modelos GLB
+for(let i=0;i<58;i++){const x=(Math.random()-.5)*360,z=(Math.random()-.5)*360;if(Math.abs(x%40)>10&&Math.abs(z%40)>10)makeTree(x,z,Math.random()>.65)}
+// Mobiliário urbano detalhado
+loadCityAsset('models/mobiliario/poste_luz.glb',-12,18,2.2);
+loadCityAsset('models/mobiliario/ponto_onibus.glb',12,18,2.0);
+loadCityAsset('models/mobiliario/semaforo.glb',-12,-18,1.8);
+loadCityAsset('models/mobiliario/banco_praca.glb',12,-18,1.7);
 // Postes, placas e pontos de referência
 for(let i=-160;i<=160;i+=80){for(const z of [-12,12]){block(.16,5,.16,M.metal,i,2.5,z);const lamp=mesh(new THREE.SphereGeometry(.28,8,6),mat(0xffedb1),i,5,z);}}
 const garageX=17,garageZ=-9;block(11,5,9,mat(0x315466),garageX,2.5,garageZ);block(11.2,.35,9.2,mat(0x202c34),garageX,5.1,garageZ);block(6,2.9,.16,mat(0x14232c),garageX,1.45,garageZ+4.6);block(7,.8,.22,mat(0xf2b84c),garageX,4,garageZ+4.8);
@@ -162,11 +153,10 @@ player.position.set(0,0,3);
 let riding=false,runOn=false,velocity=0,yaw=0,camYaw=0,camPitch=.22,keys={},joy={x:0,y:0},gas=false,brake=false,clock=new THREE.Clock();
 setBike(0);bike.position.set(2,0,3);
 
-// Trânsito civil: carros circulam pela malha
+// Trânsito civil com carros GLB completos, em vez de caixas geométricas
 const traffic=[];
-function makeCar(x,z,color,dir){const g=new THREE.Group(),paint=mat(color,.45,.05);block(1.8,.62,3,paint,0,.65,0,g);block(1.42,.68,1.55,M.glass,0,1.25,-.05,g);for(const xx of [-.92,.92])for(const zz of [-.95,.95]){const w=mesh(new THREE.CylinderGeometry(.25,.25,.16,12),M.rubber,xx,.34,zz,g);w.rotation.z=Math.PI/2}g.position.set(x,0,z);scene.add(g);traffic.push({g,dir,speed:3+Math.random()*3,axis:Math.random()>.5?'x':'z'})}
-const colors=[0xc74738,0xe2e0d7,0x305b89,0x464e55,0xd5a33b,0x4d8a60];
-for(let i=0;i<16;i++)makeCar(-6+(i%2)*12,-180+i*23,colors[i%colors.length],i%2?1:-1);
+function makeCar(x,z,color,dir){const path=Math.random()>.35?'models/veiculos/carro.glb':'models/veiculos/taxi.glb';cityLoader.load(cityAssetBase+path,gltf=>{const g=gltf.scene;g.position.set(x,0,z);g.scale.setScalar(1.8);g.rotation.y=Math.PI;g.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});scene.add(g);traffic.push({g,dir,speed:3+Math.random()*3,axis:Math.random()>.5?'x':'z'})},undefined,err=>console.warn('Carro GLB não carregou',err))}
+for(let i=0;i<12;i++)makeCar(-6+(i%2)*12,-180+i*30,0xffffff,i%2?1:-1);
 // Marcadores das missões
 const missionPoints=[new THREE.Vector3(55,0,-58),new THREE.Vector3(-75,0,50),new THREE.Vector3(92,0,88)];
 let missionIndex=0;const marker=new THREE.Group();scene.add(marker);
