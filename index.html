@@ -76,6 +76,7 @@ function block(w,h,d,material,x,y,z,parent=scene){return mesh(new THREE.BoxGeome
 const cityLoader=new GLTFLoader();
 const cityAssetBase='https://raw.githubusercontent.com/kayquer/kit-cidade-lowpoly/main/';
 function loadCityAsset(path,x,z,scale=1,rotation=0){cityLoader.load(cityAssetBase+path,gltf=>{const obj=gltf.scene;obj.position.set(x,0,z);obj.scale.setScalar(scale);obj.rotation.y=rotation;obj.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});scene.add(obj)},undefined,err=>console.warn('Modelo opcional não carregou:',path,err));}
+function makeTree(x,z,palm=false){const choices=palm?['models/vegetacao/buriti.glb']:['models/vegetacao/ipe_amarelo.glb','models/vegetacao/araucaria.glb','models/vegetacao/arbustos.glb'];const path=choices[Math.floor(Math.random()*choices.length)];loadCityAsset(path,x,z,palm?2.8:2.2,Math.random()*Math.PI*2)}
 const ground=mesh(new THREE.PlaneGeometry(520,520),M.grass,0,-.18,0);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;
 // Malha viária em quadras, com calçadas e faixas
 for(let p=-200;p<=200;p+=40){
