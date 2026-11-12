@@ -1,6 +1,6 @@
-# Grau de Rua
+# Moto de Rua
 
-Protótipo 3D para navegador, desenvolvido com Three.js.
+Jogo 3D de exploração e direção de motocicletas em uma cidade, desenvolvido com Three.js.
 
 ## Já implementado
 - Cidade aberta com ruas, calçadas, quadras, casas e prédios.
