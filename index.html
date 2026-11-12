@@ -157,7 +157,35 @@ const bikeDefs=[
 {name:'Custom 250',price:1400,color:0x8755a8,speed:20,style:8},
 {name:'Racing 600',price:1800,color:0x21a7a0,speed:29,style:9}
 ];
-let owned=[true,false,false,false,false,false,false,false,false,false],selectedBike=0,money=500,bike=null,bikeWheels=[];
+let owned=[true,false,false,false,false,false,false,false,false,false],selectedBike=0,money=500,bike=null,bikeWheels=[],activeBikeMixer=null;
+const realBikeModels=[
+ 'https://cdn.3dassets.dev/assets/15416/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15415/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15422/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15421/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15420/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15418/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15417/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15423/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15424/v1/model.glb',
+ 'https://cdn.3dassets.dev/assets/15425/v1/model.glb'
+];
+const bikeModelCache=new Map();
+function loadRealBikeModel(index,target){
+ const url=realBikeModels[index];
+ if(!bikeModelCache.has(url))bikeModelCache.set(url,new Promise((resolve,reject)=>cityLoader.load(url,resolve,undefined,reject)));
+ bikeModelCache.get(url).then(gltf=>{
+  if(bike!==target)return;
+  const model=gltf.scene.clone(true);
+  model.rotation.y=Math.PI;
+  model.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});
+  target.clear();target.add(model);
+  target.userData.realModel=true;
+  activeBikeMixer=gltf.animations.length?new THREE.AnimationMixer(model):null;
+  const wheelClip=gltf.animations.find(a=>a.name.toLowerCase().includes('wheel-roll'));
+  if(activeBikeMixer&&wheelClip)activeBikeMixer.clipAction(wheelClip).play();
+ }).catch(err=>console.warn('Modelo 3D da moto não carregou; mantendo o modelo reserva.',url,err));
+}
 function buildBike(def){const g=new THREE.Group(),paint=mat(def.color,.34,.12),black=M.rubber,metal=M.metal;
  const wheelRadius=def.style===2||def.style===7?.58:.47;
  for(const z of [-1.12,1.12]){const w=mesh(new THREE.TorusGeometry(wheelRadius,.12,9,20),black,0,wheelRadius,z,g);w.rotation.y=Math.PI/2;bikeWheels.push(w);const hub=mesh(new THREE.CylinderGeometry(.16,.16,.18,12),metal,0,wheelRadius,z,g);hub.rotation.z=Math.PI/2}
@@ -176,7 +204,7 @@ function buildBike(def){const g=new THREE.Group(),paint=mat(def.color,.34,.12),b
  if(def.style===6){block(.8,.6,.5,paint,0,1.3,.78,g);block(.75,.36,.5,paint,0,1.02,1.1,g)}
  if(def.style===8){block(.78,.18,.9,metal,0,.8,.85,g);block(.7,.18,.9,metal,0,.8,-.9,g)}
  g.userData.wheels=[];return g}
-function setBike(i){if(bike)scene.remove(bike);bikeWheels=[];selectedBike=i;bike=buildBike(bikeDefs[i]);bike.position.copy(player.position);bike.rotation.y=player.rotation.y;scene.add(bike);bike.visible=!riding}
+function setBike(i){if(bike)scene.remove(bike);bikeWheels=[];activeBikeMixer=null;selectedBike=i;bike=buildBike(bikeDefs[i]);bike.position.copy(player.position);bike.rotation.y=player.rotation.y;scene.add(bike);bike.visible=!riding;loadRealBikeModel(i,bike)}
 const player=new THREE.Group();scene.add(player);
 const shirt=mat(0x214a78),pants=mat(0x202a38),skin=mat(0xb97853),shoe=mat(0x17191d);
 const torso=mesh(new THREE.CapsuleGeometry(.34,.62,4,8),shirt,0,1.18,0,player);
@@ -239,7 +267,7 @@ function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta()
  if(!riding){const swing=Math.sin(time*(runOn?12:8))*Math.min(1,Math.abs(velocity)/3);legL.rotation.x=swing*.65;legR.rotation.x=-swing*.65;armL.rotation.x=-swing*.5;armR.rotation.x=swing*.5;torso.rotation.z=strafe*.06}
  bikeWheels.forEach(w=>{w.rotation.x+=velocity*dt*2});
  traffic.forEach(t=>{if(t.axis==='z')t.g.position.z+=t.dir*t.speed*dt;else t.g.position.x+=t.dir*t.speed*dt;if(t.g.position.z>210)t.g.position.z=-210;if(t.g.position.z< -210)t.g.position.z=210;if(t.g.position.x>210)t.g.position.x=-210;if(t.g.position.x< -210)t.g.position.x=210});
-gobkitMixers.forEach(m=>m.update(dt));
+gobkitMixers.forEach(m=>m.update(dt));if(activeBikeMixer)activeBikeMixer.update(dt);
  const target=base.position.clone();target.y+=riding?1.2:1.4;const dist=riding?8:7;const desired=new THREE.Vector3(target.x+Math.sin(camYaw)*dist,target.y+3+camPitch*5,target.z+Math.cos(camYaw)*dist);camera.position.lerp(desired,1-Math.exp(-5*dt));camera.lookAt(target.x,target.y+.3,target.z);
  if(base.position.distanceTo(marker.position)<4){missionIndex++;money+=150;$('money').textContent=money;if(missionIndex>=missionPoints.length){missionIndex=0;toast('Missões concluídas! +$150. Novos pontos marcados.')}else toast('Missão concluída! +$150');placeMarker();updateObjective()}
  if(Math.floor(time*2)%2===0)updateMinimap();
