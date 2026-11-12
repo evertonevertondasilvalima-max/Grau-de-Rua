@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101a25">
+<title>Grau de Rua</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,Arial}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#84b6d5;color:#fff}body{touch-action:none}canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none;text-shadow:0 2px 4px #0009}
+.glass{background:linear-gradient(145deg,#172534e8,#0b141de8);border:1px solid #ffffff24;border-radius:14px;box-shadow:0 8px 24px #0003;backdrop-filter:blur(9px)}
+#brand{position:absolute;top:12px;left:12px;padding:9px 13px;font-weight:1000;letter-spacing:1.2px;font-size:16px}
+#brand span{color:#75d8ff}
+#stats{position:absolute;right:12px;top:12px;padding:9px 13px;text-align:right;font-size:13px;font-weight:800;line-height:1.55}
+#objective{position:absolute;top:70px;left:12px;width:min(220px,52vw);padding:10px 12px;font-size:12px;line-height:1.4}
+#objective b{color:#8ee1ff;letter-spacing:.5px}
+#minimap{position:absolute;right:12px;top:94px;width:112px;height:112px;border-radius:14px;border:1px solid #ffffff50;background:#172534d9}
+#toast{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);font-weight:900;font-size:17px;opacity:0;transition:opacity .2s;text-align:center;background:#111d;padding:12px 18px;border-radius:12px;max-width:85vw}
+#joystick{position:absolute;left:16px;bottom:20px;width:112px;height:112px;border-radius:50%;border:2px solid #ffffff66;background:#14263766;pointer-events:auto;touch-action:none}
+#stick{position:absolute;left:32px;top:32px;width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:#e4f3ffdf;box-shadow:0 3px 10px #0006}
+#look{position:absolute;left:140px;right:135px;bottom:0;height:48%;pointer-events:auto;touch-action:none}
+#actions{position:absolute;right:12px;bottom:17px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+button{border:1px solid #ffffff55;border-radius:12px;color:#fff;background:linear-gradient(145deg,#28445b,#142638);font:800 12px system-ui;padding:11px 13px;box-shadow:0 4px 12px #0005;touch-action:none}
+button:active{filter:brightness(1.3);transform:scale(.97)}
+#actions button{min-width:112px}
+#gas{background:linear-gradient(145deg,#187d65,#10493e)}
+#brake{background:linear-gradient(145deg,#9a433a,#51231f)}
+#help{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:10px;padding:7px 10px;white-space:nowrap;opacity:.85}
+.overlay{position:fixed;inset:0;background:#08121ddf;display:none;align-items:center;justify-content:center;z-index:10;padding:18px}
+.overlay.show{display:flex}
+.dialog{width:min(440px,96vw);max-height:88vh;overflow:auto;padding:22px}
+.dialog h1,.dialog h2{margin:0 0 8px}.dialog p{font-size:13px;line-height:1.5;color:#cedce8}
+.primary{width:100%;padding:14px;margin-top:10px;background:linear-gradient(120deg,#1685b4,#235f9c);font-size:14px}
+#bikeList{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.bikeChoice{padding:10px;text-align:left;min-height:62px}
+.bikeChoice small{display:block;color:#a9c4d7;font-size:10px;margin-top:3px}
+#garageTitle{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#notice{font-size:11px;color:#9fb4c4}
+@media(max-width:600px){#brand{font-size:13px;top:9px;left:9px}#stats{top:9px;right:9px;font-size:11px}#objective{top:62px;left:9px;font-size:10px;width:165px}#minimap{top:104px;width:88px;height:88px;right:9px}#joystick{width:102px;height:102px;left:12px;bottom:14px}#stick{left:28px;top:28px}#actions{right:9px;bottom:12px;gap:6px}#actions button{min-width:94px;padding:10px 8px;font-size:10px}#look{left:125px;right:112px;height:44%}#help{display:none}.dialog{padding:17px}}
+</style>
+</head>
+<body>
+<div id="menu" class="overlay show"><div class="dialog glass">
+<h1 style="font-size:34px;letter-spacing:1px">GRAU <span style="color:#70d8ff">DE RUA</span></h1>
+<p>Explore uma cidade brasileira em 3D. Caminhe, corra, pilote motos, visite a garagem, encontre pontos pela cidade e ganhe dinheiro fictício nas missões.</p>
+<p><b>Protótipo jogável — versão inicial</b><br>Modelos e animações estão sendo construídos por etapas. O jogo precisa de internet para carregar a biblioteca 3D.</p>
+<button id="play" class="primary">ENTRAR NA CIDADE</button></div></div>
+<div id="garage" class="overlay"><div class="dialog glass">
+<div id="garageTitle"><h2>GARAGEM</h2><b id="garageMoney">$500</b></div>
+<p>Escolha uma das 10 motos. As motos bloqueadas podem ser compradas com o dinheiro fictício das missões.</p>
+<div id="bikeList"></div><div id="notice">Aproxime-se da garagem para abrir este menu.</div>
+<button id="closeGarage" class="primary">VOLTAR À CIDADE</button></div></div>
+<div id="hud">
+<div id="brand" class="glass">GRAU <span>DE RUA</span></div>
+<div id="stats" class="glass">💵 $<span id="money">500</span><br><span id="mode">A PÉ</span></div>
+<div id="objective" class="glass"><b>MISSÃO 1</b><br>Vá até o marcador azul para explorar a cidade.</div>
+<canvas id="minimap" width="180" height="180"></canvas>
+<div id="joystick"><div id="stick"></div></div><div id="look"></div>
+<div id="actions"><button id="mount">SUBIR NA MOTO</button><button id="gas">ACELERAR</button><button id="brake">FREAR</button><button id="garageBtn">GARAGEM</button><button id="run">CORRER: NÃO</button></div>
+<div id="help" class="glass">WASD mover • Arraste para olhar • E entrar/sair • Shift correr • G garagem</div>
+<div id="toast"></div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x94c9e8);scene.fog=new THREE.Fog(0x94c9e8,90,260);
+const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,600);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdaf0ff,0x55644b,2));
+const sun=new THREE.DirectionalLight(0xffe6bd,2.1);sun.position.set(-45,75,35);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;scene.add(sun);
+const mat=(c,r=.85,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+const M={grass:mat(0x668c52),road:mat(0x303840),walk:mat(0xb7b6ae),line:mat(0xe9e4ce),glass:mat(0x9fd5e5,.25),rubber:mat(0x171a1d),metal:mat(0x9baab2,.35,.55),dark:mat(0x1a252d),white:mat(0xf0eee6),wood:mat(0x7a5132)};
+function mesh(geo,material,x=0,y=0,z=0,parent=scene){const o=new THREE.Mesh(geo,material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function block(w,h,d,material,x,y,z,parent=scene){return mesh(new THREE.BoxGeometry(w,h,d),material,x,y,z,parent)}
+const ground=mesh(new THREE.PlaneGeometry(520,520),M.grass,0,-.18,0);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;
+// Malha viária em quadras, com calçadas e faixas
+for(let p=-200;p<=200;p+=40){
+ block(14,.08,420,M.road,p,0,0);block(420,.08,14,M.road,0,0,p);
+ block(1.6,.12,420,M.walk,p+8,.01,0);block(1.6,.12,420,M.walk,p-8,.01,0);
+ block(420,.12,1.6,M.walk,0,.01,p+8);block(420,.12,1.6,M.walk,0,.01,p-8);
+ for(let q=-195;q<=195;q+=12){block(.16,.025,3,M.line,p,.06,q);block(3,.025,.16,M.line,q,.06,p)}
+}
+// Casas, prédios, lojas e fachadas
+const facades=[0xe7c8a0,0xd8d8d0,0xc98f7a,0xa9c6cd,0xe9dfc8,0xc3b8a5,0xd4c5ac].map(c=>mat(c));
+const roofMats=[mat(0x594b44),mat(0x7b5144),mat(0x47515a),mat(0x9a8b73)];
+const windowMat=mat(0x8bc7d8,.24),doorMat=mat(0x65452f);
+function makeTree(x,z,palm=false){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);mesh(new THREE.CylinderGeometry(.18,.28,2.5,7),M.wood,0,1.25,0,g);if(palm){for(let i=0;i<7;i++){const a=i*Math.PI*2/7;const leaf=mesh(new THREE.ConeGeometry(.28,2.7,5),mat(0x36764a),Math.cos(a)*.95,2.7,Math.sin(a)*.95,g);leaf.rotation.z=Math.cos(a)*.8;leaf.rotation.x=Math.sin(a)*.8}}else{mesh(new THREE.IcosahedronGeometry(1.55,1),mat(0x3d824d),0,3.1,0,g);mesh(new THREE.IcosahedronGeometry(.9,0),mat(0x579657),.6,3.6,.15,g)}}
+for(let gx=-180;gx<=180;gx+=40)for(let gz=-180;gz<=180;gz+=40){
+ if(Math.abs(gx)<24&&Math.abs(gz)<24)continue;
+ const count=2+Math.floor(Math.random()*2);
+ for(let k=0;k<count;k++){const x=gx+(Math.random()-.5)*19,z=gz+(Math.random()-.5)*19,w=6+Math.random()*6,d=6+Math.random()*6,h=5+Math.random()*19;
+ const facade=facades[Math.floor(Math.random()*facades.length)],roof=roofMats[Math.floor(Math.random()*roofMats.length)];
+ block(w,h,d,facade,x,h/2,z);block(w+.2,.3,d+.2,roof,x,h+.15,z);
+ for(let y=1.8;y<h-1;y+=2.3)for(let xx=-w/2+1;xx<w/2-.5;xx+=2.1){block(.85,1,.08,windowMat,x+xx,y,z+d/2+.06)}
+ block(1.15,2,.1,doorMat,x-w*.22,1,z+d/2+.08);
+ if(Math.random()>.55)makeTree(x+w/2+1,z+d/2+1,Math.random()>.65);
+ }
+}
+for(let i=0;i<36;i++){const x=(Math.random()-.5)*350,z=(Math.random()-.5)*350;if(Math.abs(x%40)>11&&Math.abs(z%40)>11)makeTree(x,z,Math.random()>.75)}
+// Postes, placas e pontos de referência
+for(let i=-160;i<=160;i+=80){for(const z of [-12,12]){block(.16,5,.16,M.metal,i,2.5,z);const lamp=mesh(new THREE.SphereGeometry(.28,8,6),mat(0xffedb1),i,5,z);}}
+const garageX=17,garageZ=-9;block(11,5,9,mat(0x315466),garageX,2.5,garageZ);block(11.2,.35,9.2,mat(0x202c34),garageX,5.1,garageZ);block(6,2.9,.16,mat(0x14232c),garageX,1.45,garageZ+4.6);block(7,.8,.22,mat(0xf2b84c),garageX,4,garageZ+4.8);
+// Dez motos com estilos/cores distintos, construídas em 3D low-poly
+const bikeDefs=[
+{name:'Urbana 125',price:0,color:0x2186c8,speed:17,style:0},
+{name:'Street 150',price:180,color:0xd74736,speed:19,style:1},
+{name:'Trail 160',price:260,color:0x4f9d5c,speed:18,style:2},
+{name:'Sport 250',price:420,color:0xe7b52e,speed:23,style:3},
+{name:'Naked 300',price:550,color:0x343b47,speed:24,style:4},
+{name:'Clássica 150',price:700,color:0xc9b58a,speed:18,style:5},
+{name:'Touring 400',price:900,color:0x687b92,speed:22,style:6},
+{name:'Enduro 250',price:1100,color:0xe47b28,speed:22,style:7},
+{name:'Custom 250',price:1400,color:0x8755a8,speed:20,style:8},
+{name:'Racing 600',price:1800,color:0x21a7a0,speed:29,style:9}
+];
+let owned=[true,false,false,false,false,false,false,false,false,false],selectedBike=0,money=500,bike=null,bikeWheels=[];
+function buildBike(def){const g=new THREE.Group(),paint=mat(def.color,.34,.12),black=M.rubber,metal=M.metal;
+ const wheelRadius=def.style===2||def.style===7?.58:.47;
+ for(const z of [-1.12,1.12]){const w=mesh(new THREE.TorusGeometry(wheelRadius,.12,9,20),black,0,wheelRadius,z,g);w.rotation.y=Math.PI/2;bikeWheels.push(w);const hub=mesh(new THREE.CylinderGeometry(.16,.16,.18,12),metal,0,wheelRadius,z,g);hub.rotation.z=Math.PI/2}
+ block(.13,.85,.14,metal,0,.94,-.93,g).rotation.x=-.2;
+ block(.14,.62,.14,metal,0,.96,.91,g);
+ block(.56,.36,1.05,paint,0,1.12,0,g);
+ block(.42,.25,.72,M.dark,0,1.4,.05,g);
+ block(.48,.16,.68,mat(0x181d22),0,1.57,-.06,g);
+ if(def.style===3||def.style===9){block(.68,.48,.65,paint,0,1.43,-.52,g);block(.72,.28,.25,paint,0,1.16,-1.08,g)}
+ else if(def.style===2||def.style===7){block(.6,.5,.55,paint,0,1.5,-.4,g);block(.22,.7,.2,metal,0,1.1,-.95,g)}
+ else if(def.style===5||def.style===8){block(.7,.26,.56,paint,0,1.28,-.43,g)}
+ else{block(.55,.34,.5,paint,0,1.37,-.35,g)}
+ block(.72,.1,.12,metal,0,1.63,-.92,g);block(.14,.5,.14,metal,0,1.12,.94,g);
+ const lamp=mesh(new THREE.SphereGeometry(.19,10,8),mat(0xfff1c3,.25),0,1.3,-1.15,g);
+ block(.16,.18,1.2,metal,.34,.68,.12,g);
+ if(def.style===6){block(.8,.6,.5,paint,0,1.3,.78,g);block(.75,.36,.5,paint,0,1.02,1.1,g)}
+ if(def.style===8){block(.78,.18,.9,metal,0,.8,.85,g);block(.7,.18,.9,metal,0,.8,-.9,g)}
+ g.userData.wheels=[];return g}
+function setBike(i){if(bike)scene.remove(bike);bikeWheels=[];selectedBike=i;bike=buildBike(bikeDefs[i]);bike.position.copy(player.position);bike.rotation.y=player.rotation.y;scene.add(bike);bike.visible=!riding}
+const player=new THREE.Group();scene.add(player);
+const shirt=mat(0x214a78),pants=mat(0x202a38),skin=mat(0xb97853),shoe=mat(0x17191d);
+const torso=mesh(new THREE.CapsuleGeometry(.34,.62,4,8),shirt,0,1.18,0,player);
+const head=mesh(new THREE.SphereGeometry(.26,12,10),skin,0,1.9,0,player);
+const hair=mesh(new THREE.SphereGeometry(.27,10,8),mat(0x25201d),0,2.04,.015,player);
+const armL=block(.17,.7,.18,shirt,-.43,1.24,0,player),armR=block(.17,.7,.18,shirt,.43,1.24,0,player);
+const legL=block(.22,.72,.24,pants,-.17,.48,0,player),legR=block(.22,.72,.24,pants,.17,.48,0,player);
+block(.24,.14,.36,shoe,-.17,.1,-.03,player);block(.24,.14,.36,shoe,.17,.1,-.03,player);
+player.position.set(0,0,3);
+let riding=false,runOn=false,velocity=0,yaw=0,camYaw=0,camPitch=.22,keys={},joy={x:0,y:0},gas=false,brake=false,clock=new THREE.Clock();
+setBike(0);bike.position.set(2,0,3);
+// Trânsito civil: carros circulam pela malha
+const traffic=[];
+function makeCar(x,z,color,dir){const g=new THREE.Group(),paint=mat(color,.45,.05);block(1.8,.62,3,paint,0,.65,0,g);block(1.42,.68,1.55,M.glass,0,1.25,-.05,g);for(const xx of [-.92,.92])for(const zz of [-.95,.95]){const w=mesh(new THREE.CylinderGeometry(.25,.25,.16,12),M.rubber,xx,.34,zz,g);w.rotation.z=Math.PI/2}g.position.set(x,0,z);scene.add(g);traffic.push({g,dir,speed:3+Math.random()*3,axis:Math.random()>.5?'x':'z'})}
+const colors=[0xc74738,0xe2e0d7,0x305b89,0x464e55,0xd5a33b,0x4d8a60];
+for(let i=0;i<16;i++)makeCar(-6+(i%2)*12,-180+i*23,colors[i%colors.length],i%2?1:-1);
+// Marcadores das missões
+const missionPoints=[new THREE.Vector3(55,0,-58),new THREE.Vector3(-75,0,50),new THREE.Vector3(92,0,88)];
+let missionIndex=0;const marker=new THREE.Group();scene.add(marker);
+const ring=mesh(new THREE.TorusGeometry(2,.18,8,24),mat(0x21cbff,.3,.1),0,.25,0,marker);ring.rotation.x=Math.PI/2;
+mesh(new THREE.CylinderGeometry(.12,.12,3,8),mat(0x25bfff),0,1.6,0,marker);
+const beacon=mesh(new THREE.ConeGeometry(.55,1.2,8),mat(0x92edff),0,3.5,0,marker);
+function placeMarker(){marker.position.copy(missionPoints[missionIndex])}placeMarker();
+function updateObjective(){const names=['visite o mirante','passe pelo bairro','chegue ao ponto de encontro'];$('objective').innerHTML='<b>MISSÃO '+(missionIndex+1)+'</b><br>'+names[missionIndex]+'. Recompensa: $150.'}
+updateObjective();
+function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.opacity=0,1800)}
+function setRide(v){riding=v;player.visible=!v;bike.visible=v; if(v){bike.position.copy(player.position);toast('Você subiu na moto. Boa viagem!')}else{player.position.copy(bike.position);player.position.x+=1.5;toast('Você está a pé.');} $('mode').textContent=v?'NA MOTO':'A PÉ';$('mount').textContent=v?'DESCER DA MOTO':'SUBIR NA MOTO';}
+function toggleRide(){if(riding){setRide(false);return}if(player.position.distanceTo(bike.position)<5)setRide(true);else toast('Chegue perto da moto para subir.')}
+function openGarage(){if(player.position.distanceTo(new THREE.Vector3(garageX,0,garageZ))>24){toast('A garagem fica perto do prédio azul.');return}renderGarage();$('garage').classList.add('show')}
+function renderGarage(){$('garageMoney').textContent='$'+money;$('bikeList').innerHTML='';bikeDefs.forEach((d,i)=>{const b=document.createElement('button');b.className='bikeChoice';const status=owned[i]?(selectedBike===i?'EM USO':'SELECIONAR'):'COMPRAR $'+d.price;b.innerHTML='<b>'+(i+1)+'. '+d.name+'</b><small>'+status+' • velocidade '+d.speed+'</small>';b.style.borderColor=owned[i]&&selectedBike===i?'#73d8ff':'#ffffff44';b.onclick=()=>{if(owned[i]){setBike(i);bike.position.copy(riding?player.position:bike.position);renderGarage();toast(d.name+' selecionada')}else if(money>=d.price){money-=d.price;owned[i]=true;$('money').textContent=money;setBike(i);renderGarage();toast(d.name+' desbloqueada!')}else toast('Você precisa de mais dinheiro.');};$('bikeList').appendChild(b)})}
+$('play').onclick=()=>{$('menu').classList.remove('show');toast('Encontre os marcadores azuis para ganhar dinheiro!')};
+$('mount').onclick=toggleRide;$('garageBtn').onclick=openGarage;$('closeGarage').onclick=()=>$('garage').classList.remove('show');
+$('run').onclick=()=>{runOn=!runOn;$('run').textContent='CORRER: '+(runOn?'SIM':'NÃO')};
+$('gas').addEventListener('pointerdown',e=>{gas=true;e.preventDefault()});['pointerup','pointercancel','pointerleave'].forEach(t=>$('gas').addEventListener(t,()=>gas=false));
+$('brake').addEventListener('pointerdown',e=>{brake=true;e.preventDefault()});['pointerup','pointercancel','pointerleave'].forEach(t=>$('brake').addEventListener(t,()=>brake=false));
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='e')toggleRide();if(e.key.toLowerCase()==='g')openGarage();if(e.key==='Shift')runOn=true});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key==='Shift')runOn=false});
+const joyEl=$('joystick'),stick=$('stick');let joyId=null;
+joyEl.addEventListener('pointerdown',e=>{joyId=e.pointerId;joyEl.setPointerCapture(joyId);moveJoy(e)});
+joyEl.addEventListener('pointermove',e=>{if(e.pointerId===joyId)moveJoy(e)});
+function moveJoy(e){const r=joyEl.getBoundingClientRect();let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),l=Math.hypot(dx,dy),max=33;if(l>max){dx=dx/l*max;dy=dy/l*max}joy.x=dx/max;joy.y=dy/max;stick.style.transform='translate('+dx+'px,'+dy+'px)'}
+function endJoy(){joyId=null;joy.x=joy.y=0;stick.style.transform='translate(0,0)'}joyEl.addEventListener('pointerup',endJoy);joyEl.addEventListener('pointercancel',endJoy);
+let lookId=null,prevX=0,prevY=0;$('look').addEventListener('pointerdown',e=>{lookId=e.pointerId;prevX=e.clientX;prevY=e.clientY;$('look').setPointerCapture(lookId)});
+$('look').addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;const dx=e.clientX-prevX,dy=e.clientY-prevY;camYaw-=dx*.006;camPitch=THREE.MathUtils.clamp(camPitch+dy*.004,-.12,.85);prevX=e.clientX;prevY=e.clientY});
+function endLook(){lookId=null}$('look').addEventListener('pointerup',endLook);$('look').addEventListener('pointercancel',endLook);
+function updateMinimap(){const c=$('minimap').getContext('2d');c.clearRect(0,0,180,180);c.fillStyle='#233c39';c.fillRect(0,0,180,180);c.strokeStyle='#85949b';c.lineWidth=5;for(let p=-4;p<=4;p++){const v=90+p*40*1.6/4;c.beginPath();c.moveTo(v,0);c.lineTo(v,180);c.stroke();c.beginPath();c.moveTo(0,v);c.lineTo(180,v);c.stroke()}const pos=riding?bike.position:player.position;const sx=90+pos.x*.48,sy=90+pos.z*.48;c.fillStyle='#60dbff';c.beginPath();c.arc(90+garageX*.48,90+garageZ*.48,4,0,7);c.fill();c.fillStyle='#ffe16c';c.beginPath();c.arc(90+missionPoints[missionIndex].x*.48,90+missionPoints[missionIndex].z*.48,4,0,7);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(sx,sy,5,0,7);c.fill()}
+function clampWorld(o){o.x=THREE.MathUtils.clamp(o.x,-205,205);o.z=THREE.MathUtils.clamp(o.z,-205,205)}
+function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.04),time=clock.elapsedTime;
+ marker.position.y=.15+Math.sin(time*2)*.18;beacon.rotation.y+=dt*.7;
+ const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-joy.y;
+ const strafe=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;
+ let targetSpeed=0;
+ if(riding){const input=Math.max(0,forward)+(gas?1:0);targetSpeed=input*bikeDefs[selectedBike].speed;if(brake||(keys.s))targetSpeed=-4;velocity=THREE.MathUtils.damp(velocity,targetSpeed,2.4,dt)}
+ else{targetSpeed=(runOn?9:5)*Math.min(1,Math.hypot(forward,strafe));velocity=THREE.MathUtils.damp(velocity,targetSpeed,8,dt)}
+ const base=riding?bike:player;let dir=new THREE.Vector3(strafe,0,-forward);if(dir.lengthSq()>1)dir.normalize();dir.applyAxisAngle(new THREE.Vector3(0,1,0),camYaw);
+ if(Math.abs(forward)+Math.abs(strafe)>.05){base.position.addScaledVector(dir,velocity*dt);yaw=THREE.MathUtils.lerp(yaw,Math.atan2(-dir.x,-dir.z),1-Math.exp(-8*dt))}
+ base.rotation.y=yaw;clampWorld(base.position);
+ if(riding){player.position.copy(bike.position);bike.rotation.y=yaw;b ikePlaceholder=0;}
+ else{bike.position.set(player.position.x+Math.sin(yaw)*1.7,0,player.position.z+Math.cos(yaw)*1.7);bike.rotation.y=yaw}
+ if(!riding){const swing=Math.sin(time*(runOn?12:8))*Math.min(1,Math.abs(velocity)/3);legL.rotation.x=swing*.65;legR.rotation.x=-swing*.65;armL.rotation.x=-swing*.5;armR.rotation.x=swing*.5;torso.rotation.z=strafe*.06}
+ bikeWheels.forEach(w=>{w.rotation.x+=velocity*dt*2});
+ traffic.forEach(t=>{if(t.axis==='z')t.g.position.z+=t.dir*t.speed*dt;else t.g.position.x+=t.dir*t.speed*dt;if(t.g.position.z>210)t.g.position.z=-210;if(t.g.position.z< -210)t.g.position.z=210;if(t.g.position.x>210)t.g.position.x=-210;if(t.g.position.x< -210)t.g.position.x=210});
+ const target=base.position.clone();target.y+=riding?1.2:1.4;const dist=riding?8:7;const desired=new THREE.Vector3(target.x+Math.sin(camYaw)*dist,target.y+3+camPitch*5,target.z+Math.cos(camYaw)*dist);camera.position.lerp(desired,1-Math.exp(-5*dt));camera.lookAt(target.x,target.y+.3,target.z);
+ if(base.position.distanceTo(marker.position)<4){missionIndex++;money+=150;$('money').textContent=money;if(missionIndex>=missionPoints.length){missionIndex=0;toast('Missões concluídas! +$150. Novos pontos marcados.')}else toast('Missão concluída! +$150');placeMarker();updateObjective()}
+ if(Math.floor(time*2)%2===0)updateMinimap();
+ renderer.render(scene,camera)}
+camera.position.set(0,5,11);camera.lookAt(0,1,0);frame();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5))});
+</script>
+</body></html>
