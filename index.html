@@ -267,7 +267,7 @@ function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta()
  const base=riding?bike:player;let dir=new THREE.Vector3(strafe,0,-forward);if(dir.lengthSq()>1)dir.normalize();dir.applyAxisAngle(new THREE.Vector3(0,1,0),camYaw);
  if(Math.abs(forward)+Math.abs(strafe)>.05){base.position.addScaledVector(dir,velocity*dt);yaw=THREE.MathUtils.lerp(yaw,Math.atan2(-dir.x,-dir.z),1-Math.exp(-8*dt))}
  base.rotation.y=yaw;clampWorld(base.position);
- if(riding){player.position.copy(bike.position);bike.rotation.y=yaw;}
+ if(riding){player.position.copy(bike.position);player.position.y=.15;bike.rotation.y=yaw;}
  else{bike.rotation.y=bike.rotation.y;}
  if(playerMixer)playerMixer.update(dt);
  bikeWheels.forEach(w=>{w.rotation.x+=velocity*dt*2});
