@@ -24,3 +24,16 @@ O jogo usa Three.js GLTFLoader e carrega os GLB sob demanda. É necessária cone
 ## Observação
 
 Esta atualização melhora os elementos da cidade e o trânsito. Não representa uma substituição completa de todos os modelos do jogo; alguns elementos de gameplay ainda são protótipos e precisam de etapas próprias de desenvolvimento.
+
+## Modelos adicionais Gobkit integrados
+
+Também foram adicionados modelos GLB gratuitos da biblioteca Gobkit:
+
+- **Vegetação:** TreeHigh001, TreeHigh002, Bush001 e Bush002.
+- **Moradores/NPCs:** OfficeWorker, Student, FoodCourier e StoreManager.
+- Os moradores usam a animação `idle` quando ela está presente no arquivo GLB.
+- Origem: https://gobkit.com/freebies
+- Manifesto oficial dos modelos: https://gobkit.com/api/free
+- Licença informada por modelo: **CC0 1.0 Universal**.
+
+Esses modelos são carregados pelo GLTFLoader a partir dos endereços oficiais Gobkit. Portanto, ainda exigem internet durante o carregamento. A integração não significa que os arquivos GLB estejam armazenados dentro deste repositório.
