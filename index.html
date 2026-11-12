@@ -206,13 +206,18 @@ function buildBike(def){const g=new THREE.Group(),paint=mat(def.color,.34,.12),b
  g.userData.wheels=[];return g}
 function setBike(i){if(bike)scene.remove(bike);bikeWheels=[];activeBikeMixer=null;selectedBike=i;bike=buildBike(bikeDefs[i]);bike.position.copy(player.position);bike.rotation.y=player.rotation.y;scene.add(bike);bike.visible=!riding;loadRealBikeModel(i,bike)}
 const player=new THREE.Group();scene.add(player);
-const shirt=mat(0x214a78),pants=mat(0x202a38),skin=mat(0xb97853),shoe=mat(0x17191d);
-const torso=mesh(new THREE.CapsuleGeometry(.34,.62,4,8),shirt,0,1.18,0,player);
-const head=mesh(new THREE.SphereGeometry(.26,12,10),skin,0,1.9,0,player);
-const hair=mesh(new THREE.SphereGeometry(.27,10,8),mat(0x25201d),0,2.04,.015,player);
-const armL=block(.17,.7,.18,shirt,-.43,1.24,0,player),armR=block(.17,.7,.18,shirt,.43,1.24,0,player);
-const legL=block(.22,.72,.24,pants,-.17,.48,0,player),legR=block(.22,.72,.24,pants,.17,.48,0,player);
-block(.24,.14,.36,shoe,-.17,.1,-.03,player);block(.24,.14,.36,shoe,.17,.1,-.03,player);
+let playerMixer=null,playerActions={};
+function loadPlayableCharacter(){
+ gobkitLoader.load('https://gobkit.com/freebies/human015/OfficeWorker.glb',gltf=>{
+  const obj=gltf.scene;const bounds=new THREE.Box3().setFromObject(obj);const size=bounds.getSize(new THREE.Vector3());
+  if(size.y>0)obj.scale.setScalar(1.72/size.y);
+  const scaled=new THREE.Box3().setFromObject(obj);obj.position.y=-scaled.min.y;
+  obj.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true}});
+  player.add(obj);
+  if(gltf.animations.length){playerMixer=new THREE.AnimationMixer(obj);for(const clip of gltf.animations){const name=clip.name.toLowerCase();playerActions[name]=playerMixer.clipAction(clip)}const idle=gltf.animations.find(a=>a.name.toLowerCase().includes('idle'));if(idle)playerActions[idle.name.toLowerCase()].play();}
+ },undefined,e=>console.warn('Personagem 3D não carregou:',e));
+}
+loadPlayableCharacter();
 player.position.set(0,0,3);
 let riding=false,runOn=false,velocity=0,yaw=0,camYaw=0,camPitch=.22,keys={},joy={x:0,y:0},gas=false,brake=false,clock=new THREE.Clock();
 setBike(0);bike.position.set(2,0,3);
@@ -231,7 +236,7 @@ function placeMarker(){marker.position.copy(missionPoints[missionIndex])}placeMa
 function updateObjective(){const names=['visite o mirante','passe pelo bairro','chegue ao ponto de encontro'];$('objective').innerHTML='<b>MISSÃO '+(missionIndex+1)+'</b><br>'+names[missionIndex]+'. Recompensa: $150.'}
 updateObjective();
 function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.opacity=0,1800)}
-function setRide(v){riding=v;player.visible=!v;bike.visible=v; if(v){bike.position.copy(player.position);toast('Você subiu na moto. Boa viagem!')}else{player.position.copy(bike.position);player.position.x+=1.5;toast('Você está a pé.');} $('mode').textContent=v?'NA MOTO':'A PÉ';$('mount').textContent=v?'DESCER DA MOTO':'SUBIR NA MOTO';}
+function setRide(v){riding=v;player.visible=true;bike.visible=true;if(v){player.position.copy(bike.position);player.position.y=.15;toast('Você subiu na moto. Boa viagem!')}else{player.position.copy(bike.position);player.position.y=0;player.position.x+=1.5;toast('Você está a pé.');} $('mode').textContent=v?'NA MOTO':'A PÉ';$('mount').textContent=v?'DESCER DA MOTO':'SUBIR NA MOTO';}
 function toggleRide(){if(riding){setRide(false);return}if(player.position.distanceTo(bike.position)<5)setRide(true);else toast('Chegue perto da moto para subir.')}
 function openGarage(){if(player.position.distanceTo(new THREE.Vector3(garageX,0,garageZ))>24){toast('A garagem fica perto do prédio azul.');return}renderGarage();$('garage').classList.add('show')}
 function renderGarage(){$('garageMoney').textContent='$'+money;$('bikeList').innerHTML='';bikeDefs.forEach((d,i)=>{const b=document.createElement('button');b.className='bikeChoice';const status=owned[i]?(selectedBike===i?'EM USO':'SELECIONAR'):'COMPRAR $'+d.price;b.innerHTML='<b>'+(i+1)+'. '+d.name+'</b><small>'+status+' • velocidade '+d.speed+'</small>';b.style.borderColor=owned[i]&&selectedBike===i?'#73d8ff':'#ffffff44';b.onclick=()=>{if(owned[i]){setBike(i);bike.position.copy(riding?player.position:bike.position);renderGarage();toast(d.name+' selecionada')}else if(money>=d.price){money-=d.price;owned[i]=true;$('money').textContent=money;setBike(i);renderGarage();toast(d.name+' desbloqueada!')}else toast('Você precisa de mais dinheiro.');};$('bikeList').appendChild(b)})}
@@ -263,8 +268,8 @@ function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta()
  if(Math.abs(forward)+Math.abs(strafe)>.05){base.position.addScaledVector(dir,velocity*dt);yaw=THREE.MathUtils.lerp(yaw,Math.atan2(-dir.x,-dir.z),1-Math.exp(-8*dt))}
  base.rotation.y=yaw;clampWorld(base.position);
  if(riding){player.position.copy(bike.position);bike.rotation.y=yaw;}
- else{bike.position.set(player.position.x+Math.sin(yaw)*1.7,0,player.position.z+Math.cos(yaw)*1.7);bike.rotation.y=yaw}
- if(!riding){const swing=Math.sin(time*(runOn?12:8))*Math.min(1,Math.abs(velocity)/3);legL.rotation.x=swing*.65;legR.rotation.x=-swing*.65;armL.rotation.x=-swing*.5;armR.rotation.x=swing*.5;torso.rotation.z=strafe*.06}
+ else{bike.rotation.y=bike.rotation.y;}
+ if(playerMixer)playerMixer.update(dt);
  bikeWheels.forEach(w=>{w.rotation.x+=velocity*dt*2});
  traffic.forEach(t=>{if(t.axis==='z')t.g.position.z+=t.dir*t.speed*dt;else t.g.position.x+=t.dir*t.speed*dt;if(t.g.position.z>210)t.g.position.z=-210;if(t.g.position.z< -210)t.g.position.z=210;if(t.g.position.x>210)t.g.position.x=-210;if(t.g.position.x< -210)t.g.position.x=210});
 gobkitMixers.forEach(m=>m.update(dt));if(activeBikeMixer)activeBikeMixer.update(dt);
