@@ -9,7 +9,7 @@ Jogo 3D de exploração e direção de motocicletas em uma cidade, desenvolvido 
 - Personagem 3D controlável a pé, com movimento de caminhada e corrida.
 - Câmera em terceira pessoa, controlada arrastando a tela.
 - Moto pilotável, com entrar e sair.
-- Dez variações de motos 3D criadas por código; a garagem permite desbloquear modelos usando dinheiro fictício.
+- Dez modelos distintos de motocicletas em GLB, carregados pelo GLTFLoader; a garagem permite selecionar/desbloquear as motos com dinheiro fictício.
 - HUD com minimapa, dinheiro e três missões de exploração com recompensa.
 
 ## Controles
@@ -34,10 +34,10 @@ Abra o arquivo index.html por um servidor HTTP local ou publique o repositório 
 ## Modelos e licenças
 Os modelos de cidade carregados externamente vêm do Kit Cidade Low Poly (https://github.com/kayquer/kit-cidade-lowpoly), distribuído sob CC0 1.0. Os arquivos GLB são buscados no GitHub Raw quando o jogo inicia; eles não estão copiados para este repositório.
 
-As dez motos atuais são modelos low-poly montados proceduralmente no próprio código. O personagem também é um modelo original feito com geometria do Three.js, com animação simples de caminhada/corrida. Portanto, ainda não são dez motos GLB externas nem um personagem humano rigado com animações de terceiros.
+As dez motos são modelos GLB distintos do pacote Motorcycle Racing and Street Bikes (https://3dassets.dev/packs/motorcycle-racing-and-street-bikes), sob licença CC0 1.0. O jogo carrega os arquivos diretamente do CDN da biblioteca e mantém um modelo provisório caso algum carregamento falhe. O personagem ainda é um modelo original feito com geometria do Three.js, com animação simples de caminhada/corrida.
 
 ## Próximas etapas
 - Melhorar o personagem e as animações.
-- Integrar modelos de motocicletas com licenças claras.
+- Aprimorar o enquadramento, escala e apresentação das motos na garagem e na cidade.
 - Melhorar colisões, tráfego, interiores, áudio e otimização para celulares.
 - Criar mais missões e salvar progresso.
