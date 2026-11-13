@@ -1,43 +1,45 @@
 # Moto de Rua
 
-Jogo 3D de exploração e direção de motocicletas em uma cidade, desenvolvido com Three.js.
+Protótipo 3D de exploração e direção de motocicletas em uma cidade, desenvolvido com Three.js.
 
-## Já implementado
+## Funcionalidades no código
 - Cidade aberta com ruas, calçadas, quadras, casas e prédios.
-- Modelos 3D externos de casas, comércio, oficina, árvores brasileiras e veículos.
-- Trânsito simples com carros circulando pela cidade.
-- Personagem 3D controlável a pé, com movimento de caminhada e corrida.
-- Câmera em terceira pessoa, controlada arrastando a tela.
-- Moto pilotável, com entrar e sair.
-- Dez modelos distintos de motocicletas em GLB, carregados pelo GLTFLoader; a garagem permite selecionar/desbloquear as motos com dinheiro fictício.
-- HUD com minimapa, dinheiro e três missões de exploração com recompensa.
+- Modelos GLB externos de residências, comércio, oficina, árvores, mobiliário e veículos.
+- Trânsito simples com carros GLB.
+- Personagem controlável a pé, com joystick e corrida.
+- Câmera em terceira pessoa controlada por arraste.
+- Entrar e sair da moto.
+- Garagem com dez opções de motocicletas GLB reais e seleção/desbloqueio com dinheiro fictício.
+- HUD com minimapa, dinheiro e missões de exploração.
 
 ## Controles
+
 ### Celular
 - Joystick esquerdo: andar e direcionar.
 - Arrastar a área livre da tela: girar a câmera.
 - Correr: alterna a corrida quando estiver a pé.
 - Subir na moto / Descer da moto: entrar ou sair.
 - Acelerar / Frear: controles da moto.
-- Garagem: abrir quando estiver perto do prédio da oficina.
+- Garagem: abrir perto do prédio da oficina.
 
 ### Computador
 - WASD ou setas: mover.
 - Shift: correr.
-- Arrastar com o mouse na área inferior: girar a câmera.
+- Arrastar a área inferior com o mouse: girar a câmera.
 - E: subir ou descer da moto.
 - G: abrir a garagem.
 
 ## Executar
-Abra o arquivo index.html por um servidor HTTP local ou publique o repositório com GitHub Pages. O navegador precisa de internet para carregar Three.js e os modelos GLB hospedados no repositório de assets.
+Abra `index.html` por um servidor HTTP local ou publique o repositório com GitHub Pages. É necessária conexão com a internet para carregar Three.js e os modelos GLB externos.
 
 ## Modelos e licenças
-Os modelos de cidade carregados externamente vêm do Kit Cidade Low Poly (https://github.com/kayquer/kit-cidade-lowpoly), distribuído sob CC0 1.0. Os arquivos GLB são buscados no GitHub Raw quando o jogo inicia; eles não estão copiados para este repositório.
+- **Motos:** dez GLBs do pacote [Motorcycle Racing and Street Bikes](https://3dassets.dev/packs/motorcycle-racing-and-street-bikes), licença CC0 1.0. Os arquivos são carregados individualmente pelo CDN.
+- **Cidade:** [Kit Cidade Low Poly](https://github.com/kayquer/kit-cidade-lowpoly), licença CC0 1.0, com casas, prédios, comércio, carros, táxi, árvores, arbustos e mobiliário.
+- **Personagens e vegetação adicionais:** [Gobkit](https://gobkit.com/freebies), cujos modelos gratuitos são declarados CC0 1.0.
 
-As dez motos são modelos GLB distintos do pacote Motorcycle Racing and Street Bikes (https://3dassets.dev/packs/motorcycle-racing-and-street-bikes), sob licença CC0 1.0. O jogo carrega os arquivos diretamente do CDN da biblioteca e mantém um modelo provisório caso algum carregamento falhe. O personagem ainda é um modelo original feito com geometria do Three.js, com animação simples de caminhada/corrida.
+Os arquivos binários dos modelos não estão armazenados neste repositório; são baixados de suas fontes durante a execução. Consulte [ASSETS-3D.md](ASSETS-3D.md) para a lista de arquivos e os manifestos usados na conferência.
 
-## Próximas etapas
-- Melhorar o personagem e as animações.
-- Aprimorar o enquadramento, escala e apresentação das motos na garagem e na cidade.
-- Melhorar colisões, tráfego, interiores, áudio e otimização para celulares.
-- Criar mais missões e salvar progresso.
+## Estado de validação
+As fontes, IDs, caminhos de arquivos e licenças dos assets foram conferidos. O código da garagem foi alterado para não criar motos geométricas provisórias caso um GLB falhe; a moto fica indisponível até o carregamento real ser concluído.
+
+**O jogo ainda não está aprovado para entrega:** não foi possível executar um teste visual em navegador nesta atualização. Renderização 3D, escala/orientação observada das dez motos, controles móveis, carregamento de todos os modelos e ausência de erros continuam pendentes de teste em navegador.
