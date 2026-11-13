@@ -1,0 +1,32 @@
+name: Browser smoke tests
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Playwright and Chromium
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+      - name: Run mobile browser and 3D asset tests
+        run: node tests/browser-smoke.mjs
+      - name: Upload failure screenshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: moto-de-rua-browser-failure
+          path: moto-mobile-failure.png
+          if-no-files-found: ignore
