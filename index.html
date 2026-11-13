@@ -258,7 +258,33 @@ function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearT
 function setRide(v){riding=v;player.visible=!v;bike.visible=true;if(v){player.position.copy(bike.position);player.position.y=.15;toast('Você subiu na moto. Boa viagem!')}else{player.position.copy(bike.position);player.position.y=0;player.position.x+=1.5;toast('Você está a pé.');} $('mode').textContent=v?'NA MOTO':'A PÉ';$('mount').textContent=v?'DESCER DA MOTO':'SUBIR NA MOTO';}
 function toggleRide(){if(riding){setRide(false);return}if(!bike.userData.realModel){toast(bike.userData.loadError?'Modelo 3D indisponível. Tente selecionar novamente.':'Aguarde o modelo 3D carregar.');return}if(player.position.distanceTo(bike.position)<5)setRide(true);else toast('Chegue perto da moto para subir.')}
 function openGarage(){if(player.position.distanceTo(new THREE.Vector3(garageX,0,garageZ))>24){toast('A garagem fica perto do prédio azul.');return}renderGarage();$('garage').classList.add('show')}
-function renderGarage(){$('garageMoney').textContent='$'+money;$('bikeList').innerHTML='';bikeDefs.forEach((d,i)=>{const b=document.createElement('button');b.className='bikeChoice';const status=owned[i]?(selectedBike===i?(bike?.userData.realModel?'3D CARREGADO':bike?.userData.loadError?'ERRO NO 3D':'CARREGANDO 3D…'):'SELECIONAR'):'COMPRAR b.innerHTML='<b>'+(i+1)+'. '+d.name+'</b><small>'+status+' • velocidade '+d.speed+'</small>';b.style.borderColor=owned[i]&&selectedBike===i?'#73d8ff':'#ffffff44';b.onclick=()=>{if(owned[i]){setBike(i);bike.position.copy(riding?player.position:bike.position);renderGarage();toast(d.name+' selecionada')}else if(money>=d.price){money-=d.price;owned[i]=true;$('money').textContent=money;setBike(i);renderGarage();toast(d.name+' desbloqueada!')}else toast('Você precisa de mais dinheiro.');};$('bikeList').appendChild(b)})}
+function renderGarage(){
+ $('garageMoney').textContent='$'+money;
+ $('bikeList').innerHTML='';
+ bikeDefs.forEach((d,i)=>{
+  const b=document.createElement('button');
+  b.className='bikeChoice';
+  const status=owned[i]?(selectedBike===i?(bike?.userData.realModel?'3D CARREGADO':bike?.userData.loadError?'ERRO NO 3D':'CARREGANDO 3D…'):'SELECIONAR'):'COMPRAR $'+d.price;
+  b.innerHTML='<b>'+(i+1)+'. '+d.name+'</b><small>'+status+' • velocidade '+d.speed+'</small>';
+  b.style.borderColor=owned[i]&&selectedBike===i?'#73d8ff':'#ffffff44';
+  b.onclick=()=>{
+   if(owned[i]){
+    setBike(i);
+    bike.position.copy(riding?player.position:bike.position);
+    renderGarage();
+    toast(d.name+' selecionada');
+   }else if(money>=d.price){
+    money-=d.price;
+    owned[i]=true;
+    $('money').textContent=money;
+    setBike(i);
+    renderGarage();
+    toast(d.name+' desbloqueada!');
+   }else toast('Você precisa de mais dinheiro.');
+  };
+  $('bikeList').appendChild(b);
+ });
+}
 $('play').onclick=()=>{$('menu').classList.remove('show');toast('Encontre os marcadores azuis para ganhar dinheiro!')};
 $('mount').onclick=toggleRide;$('garageBtn').onclick=openGarage;$('closeGarage').onclick=()=>$('garage').classList.remove('show');
 $('run').onclick=()=>{runOn=!runOn;$('run').textContent='CORRER: '+(runOn?'SIM':'NÃO')};
