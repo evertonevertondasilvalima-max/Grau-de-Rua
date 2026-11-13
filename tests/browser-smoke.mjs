@@ -124,7 +124,8 @@ try {
   assert.deepEqual(pageErrors, [], 'Erros fatais JavaScript: ' + pageErrors.join(' | '));
   assert.deepEqual(consoleErrors, [], 'Erros no console: ' + consoleErrors.join(' | '));
   assert.deepEqual(badResponses, [], 'Respostas HTTP com erro: ' + badResponses.join(' | '));
-  console.log(JSON.stringify({ status: 'PASS', viewport: '390x844 mobile touch', bikesLoaded: initial.bikesLoaded.length ? initial.bikesLoaded.filter(Boolean).length : 10, cityAssetsLoaded: initial.cityLoaded.length, gobkitAssetsLoaded: initial.gobkitLoaded.length, carsLoaded: initial.carsLoaded, triangles: initial.triangles, mobileControls: ['garage', 'mount/dismount', 'gas', 'joystick', 'camera drag', 'run'] }));
+  const finalState = await page.evaluate(() => ({ ...window.__MOTO_E2E__ }));
+  console.log(JSON.stringify({ status: 'PASS', viewport: '390x844 mobile touch', bikesLoaded: finalState.bikesLoaded.filter(Boolean).length, cityAssetsLoaded: initial.cityLoaded.length, gobkitAssetsLoaded: initial.gobkitLoaded.length, carsLoaded: initial.carsLoaded, triangles: initial.triangles, mobileControls: ['garage', 'mount/dismount', 'gas', 'joystick', 'camera drag', 'run'] }));
 } catch (error) {
   if (page) await page.screenshot({ path: 'moto-mobile-failure.png', fullPage: true }).catch(() => {});
   throw error;
