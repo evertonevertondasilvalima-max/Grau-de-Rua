@@ -329,7 +329,7 @@ function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta()
  if(riding){player.position.copy(bike.position);player.position.y=.15;bike.rotation.y=yaw;}
  else{bike.rotation.y=bike.rotation.y;}
  if(playerMixer)playerMixer.update(dt);
- bikeWheels.forEach(w=>{w.rotation.x+=velocity*dt*2});
+
  traffic.forEach(t=>{if(t.axis==='z')t.g.position.z+=t.dir*t.speed*dt;else t.g.position.x+=t.dir*t.speed*dt;if(t.g.position.z>210)t.g.position.z=-210;if(t.g.position.z< -210)t.g.position.z=210;if(t.g.position.x>210)t.g.position.x=-210;if(t.g.position.x< -210)t.g.position.x=210});
 gobkitMixers.forEach(m=>m.update(dt));if(activeBikeMixer)activeBikeMixer.update(dt);
  const target=base.position.clone();target.y+=riding?1.2:1.4;const dist=riding?8:7;const desired=new THREE.Vector3(target.x+Math.sin(camYaw)*dist,target.y+3+camPitch*5,target.z+Math.cos(camYaw)*dist);camera.position.lerp(desired,1-Math.exp(-5*dt));camera.lookAt(target.x,target.y+.3,target.z);
